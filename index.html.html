@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Seallijst</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  :root{--bg:#0f1424;--bg2:#161c33;--bg3:#1e2645;--brd:rgba(255,255,255,0.1);--brdh:rgba(255,255,255,0.22);--tx:#f0f2ff;--mt:rgba(240,242,255,0.45);--dm:rgba(240,242,255,0.25);--gn:#22c55e;--gnb:#14532d;--gnbr:#16a34a;--bl:#3b82f6;--rd:#ef4444;--am:#f59e0b;--amb:rgba(245,158,11,0.12);--ambd:rgba(245,158,11,0.35);--r:14px;--rs:8px;}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .app{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 16px 60px;}
+
+  .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;}
+  .h-logo{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--dm);margin-bottom:4px;}
+  .h-title{font-size:26px;font-weight:600;line-height:1.1;}
+  .h-date{font-size:13px;color:var(--mt);margin-top:4px;font-family:'DM Mono',monospace;}
+  .h-actions{display:flex;gap:8px;flex-shrink:0;padding-top:4px;flex-wrap:wrap;justify-content:flex-end;}
+
+  .btn{padding:9px 16px;border-radius:var(--rs);border:1px solid var(--brd);background:var(--bg3);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+  .btn:hover{background:var(--bg2);border-color:var(--brdh);}
+  .btn:active{transform:scale(0.97);}
+  .btn-bl{background:var(--bl);border-color:var(--bl);color:#fff;}
+  .btn-bl:hover{background:#2563eb;}
+  .btn-rd{border-color:rgba(239,68,68,0.3);color:var(--rd);}
+  .btn-rd:hover{background:rgba(239,68,68,0.1);}
+  .btn-am{border-color:var(--ambd);color:var(--am);background:var(--amb);}
+  .btn-am:hover{background:rgba(245,158,11,0.2);}
+  .btn-am.on{background:var(--am);color:#000;border-color:var(--am);font-weight:600;}
+
+  .name-bar{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .name-lbl{font-size:13px;font-weight:500;color:var(--mt);white-space:nowrap;display:flex;align-items:center;gap:6px;}
+  .name-combo{position:relative;flex:1;min-width:180px;}
+  .name-inp{width:100%;padding:9px 36px 9px 12px;border-radius:var(--rs);border:1px solid var(--brdh);background:rgba(255,255,255,0.06);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;outline:none;transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none;}
+  .name-inp:focus{border-color:var(--bl);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
+  .name-inp.ok{border-color:var(--gn);background:rgba(34,197,94,0.07);}
+  .name-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--dm);}
+  .name-req{font-size:12px;color:var(--rd);display:none;}
+  .name-req.show{display:block;}
+
+  /* OPMERKINGEN */
+  .opmerking-bar{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .opmerking-lbl{font-size:13px;font-weight:500;color:var(--mt);white-space:nowrap;}
+  .opmerking-inp{flex:1;min-width:200px;padding:9px 12px;border-radius:var(--rs);border:1px solid var(--brdh);background:rgba(255,255,255,0.06);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .15s;}
+  .opmerking-inp:focus{border-color:var(--bl);}
+  .opmerking-inp::placeholder{color:var(--dm);}
+
+  .prog-wrap{margin-bottom:20px;}
+  .prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .prog-pct{font-size:13px;font-weight:500;color:var(--mt);font-family:'DM Mono',monospace;}
+  .prog-cnt{font-size:13px;color:var(--dm);}
+  .prog-track{height:5px;background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden;}
+  .prog-fill{height:100%;background:var(--gn);border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1);}
+
+  .drive-row{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .drive-lbl{font-size:12px;color:var(--mt);white-space:nowrap;}
+  .drive-inp{flex:1;min-width:160px;padding:7px 10px;border-radius:var(--rs);border:1px solid var(--brd);background:rgba(255,255,255,0.05);color:var(--tx);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border-color .15s;}
+  .drive-inp:focus{border-color:var(--bl);}
+  .drive-inp::placeholder{color:var(--dm);}
+  .script-row{width:100%;display:flex;gap:8px;align-items:center;margin-top:4px;}
+  .script-inp{flex:1;padding:7px 10px;border-radius:var(--rs);border:1px solid var(--brd);background:rgba(255,255,255,0.05);color:var(--tx);font-family:'DM Mono',monospace;font-size:11px;outline:none;transition:border-color .15s;}
+  .script-inp:focus{border-color:var(--bl);}
+  .script-inp::placeholder{color:var(--dm);}
+  .script-hint{font-size:11px;color:var(--dm);margin-top:6px;width:100%;}
+  .script-hint a{color:var(--bl);text-decoration:none;}
+
+  .dev-banner{display:none;background:var(--amb);border:1px solid var(--ambd);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--am);gap:10px;align-items:center;}
+  .dev-banner.on{display:flex;}
+
+  .section{margin-bottom:20px;}
+  .sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .sec-lbl{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dm);}
+  .sec-line{flex:1;height:1px;background:var(--brd);}
+  .sec-badge{font-size:10px;font-family:'DM Mono',monospace;color:var(--dm);background:var(--bg3);border:1px solid var(--brd);border-radius:99px;padding:2px 8px;}
+  .sec-dev-btns{display:none;gap:6px;flex-wrap:wrap;}
+  .dev-mode .sec-dev-btns{display:flex;}
+  .sbtn{padding:4px 10px;border-radius:99px;border:1px solid var(--ambd);background:var(--amb);color:var(--am);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
+  .sbtn:hover{background:rgba(245,158,11,0.25);}
+  .sbtn-r{border-color:rgba(239,68,68,0.35)!important;color:var(--rd)!important;background:rgba(239,68,68,0.08)!important;}
+  .sbtn-r:hover{background:rgba(239,68,68,0.18)!important;}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr);}}
+
+  .tile{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);padding:14px 15px;cursor:pointer;transition:background .15s,border-color .15s,transform .1s;min-height:80px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;}
+  .tile::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:transparent;border-radius:0 var(--r) var(--r) 0;transition:background .2s;}
+  .tile:hover{background:var(--bg3);border-color:var(--brdh);}
+  .tile:active{transform:scale(0.97);}
+  .tile.filled{background:var(--gnb);border-color:var(--gnbr);}
+  .tile.filled::after{background:var(--gn);}
+  .t-name{font-size:13px;font-weight:500;color:var(--tx);line-height:1.35;padding-right:20px;}
+  .t-val{font-size:13px;color:var(--mt);margin-top:8px;font-family:'DM Mono',monospace;}
+  .tile.filled .t-val{color:#86efac;font-weight:500;}
+  .t-type{position:absolute;top:10px;right:11px;font-size:11px;color:var(--dm);}
+  .dev-mode .tile{cursor:default;}
+  .dev-mode .tile:hover{background:var(--bg2);border-color:var(--brd);transform:none;}
+  .dev-mode .tile.filled:hover{background:var(--gnb);border-color:var(--gnbr);}
+  .tile-dov{display:none;position:absolute;inset:0;background:rgba(10,15,35,0.88);border-radius:calc(var(--r) - 1px);align-items:center;justify-content:center;gap:8px;z-index:5;}
+  .dev-mode .tile-dov{display:flex;}
+  .tdbtn{width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:var(--tx);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+  .tdbtn:hover{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.3);}
+  .tdbtn.del:hover{background:rgba(239,68,68,0.25);border-color:rgba(239,68,68,0.5);color:var(--rd);}
+  .tdbtn svg{width:14px;height:14px;pointer-events:none;}
+  .drag-h{display:none;position:absolute;top:8px;left:9px;color:var(--am);cursor:grab;z-index:6;padding:2px;line-height:0;}
+  .dev-mode .drag-h{display:block;}
+  .drag-h:active{cursor:grabbing;}
+  .tile.dragging{opacity:.3;border:1.5px dashed var(--am)!important;}
+  .tile.drag-over{border:1.5px solid var(--bl)!important;background:rgba(59,130,246,0.1)!important;}
+
+  .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center;padding:20px;}
+  .mo.open{display:flex;}
+  .md{background:var(--bg2);border:1px solid var(--brdh);border-radius:20px;padding:24px;width:100%;max-width:380px;animation:mdin .18s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes mdin{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:none}}
+  .md-lbl{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dm);margin-bottom:6px;}
+  .md-title{font-size:18px;font-weight:600;color:var(--tx);margin-bottom:18px;line-height:1.3;}
+  .big-inp{width:100%;padding:13px 16px;border-radius:12px;border:1px solid var(--brdh);background:rgba(255,255,255,0.05);color:var(--tx);font-family:'DM Mono',monospace;font-size:22px;font-weight:500;text-align:center;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;}
+  .big-inp:focus{border-color:var(--bl);box-shadow:0 0 0 3px rgba(59,130,246,0.15);}
+  .md-hint{font-size:12px;color:var(--dm);text-align:center;margin-top:8px;}
+  .ef{margin-bottom:14px;}
+  .el{font-size:12px;color:var(--mt);margin-bottom:6px;display:block;}
+  .ei{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--brdh);background:rgba(255,255,255,0.05);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color .15s;}
+  .ei:focus{border-color:var(--bl);}
+  .tbns{display:flex;gap:8px;}
+  .tbtn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--brd);background:var(--bg3);color:var(--mt);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center;}
+  .tbtn.sel{border-color:var(--bl);background:rgba(59,130,246,0.15);color:var(--tx);}
+  .btns3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:18px;}
+  .btns2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px;}
+  .mb{padding:12px;border-radius:10px;border:1px solid var(--brd);background:var(--bg3);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;}
+  .mb:hover{border-color:var(--brdh);background:var(--bg);}
+  .mb:active{transform:scale(0.97);}
+  .mb-ok{background:var(--bl);border-color:var(--bl);color:#fff;}
+  .mb-ok:hover{background:#2563eb;}
+  .mb-del{border-color:rgba(239,68,68,0.3);color:var(--rd);}
+  .mb-del:hover{background:rgba(239,68,68,0.1);}
+
+  .status{display:flex;align-items:center;gap:10px;margin-top:20px;padding:12px 16px;background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);font-size:13px;color:var(--mt);min-height:44px;}
+  .sdot{width:8px;height:8px;border-radius:50%;background:var(--dm);flex-shrink:0;transition:background .3s;}
+  .sdot.ok{background:var(--gn);}
+  .sdot.saving{background:var(--am);animation:blink 1s infinite;}
+  .sdot.err{background:var(--rd);}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a2740;border:1px solid rgba(59,130,246,0.4);color:var(--tx);font-size:14px;font-weight:500;padding:12px 22px;border-radius:99px;z-index:300;transition:transform .3s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;pointer-events:none;white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <div class="header">
+    <div>
+      <div class="h-logo">Distributie &amp; Logistiek</div>
+      <div class="h-title">Seallijst</div>
+      <div class="h-date" id="hdr-date">—</div>
+    </div>
+    <div class="h-actions">
+      <button class="btn btn-am" id="dev-btn" onclick="toggleDev()">&#9998; Bewerken</button>
+      <button class="btn btn-rd" onclick="resetAll()">Reset</button>
+      <button class="btn btn-bl" onclick="saveToSheet()">&#x2191; Opslaan in Drive</button>
+    </div>
+  </div>
+
+  <div class="name-bar">
+    <div class="name-lbl">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Ingevuld door:
+    </div>
+    <div class="name-combo">
+      <input class="name-inp" id="name-inp" list="name-list" placeholder="Selecteer of typ je naam..." autocomplete="off">
+      <datalist id="name-list">
+        <option value="Dave"><option value="Jesper"><option value="José">
+        <option value="Greg"><option value="Ian"><option value="Bart">
+        <option value="Matthias"><option value="Sarkis"><option value="Mart">
+        <option value="Dhariël">
+      </datalist>
+      <svg class="name-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="name-req" id="name-req">Vul je naam in voor je opslaat</div>
+  </div>
+
+  <div class="opmerking-bar">
+    <span class="opmerking-lbl">Opmerkingen:</span>
+    <input class="opmerking-inp" id="opmerking-inp" type="text" placeholder="Optioneel — bijv. '3 be pri rc'">
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-row">
+      <span class="prog-pct" id="prog-pct">0%</span>
+      <span class="prog-cnt" id="prog-cnt">0 ingevuld</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="drive-row">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--mt);flex-shrink:0"><path d="M4 20h16M12 4v12M8 16l4 4 4-4"/></svg>
+    <span class="drive-lbl">Sheet ID:</span>
+    <input class="drive-inp" id="sheet-id" type="text" value="1piSE7HWcAgSomTZz42JoYpxUvkVCje5aIRmdwZNOpIE" placeholder="Sheet ID...">
+    <button class="btn" onclick="openSheet()" style="flex-shrink:0">Openen &#x2197;</button>
+    <div class="script-row">
+      <span class="drive-lbl" style="white-space:nowrap">Script URL:</span>
+      <input class="script-inp" id="script-url" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="script-hint">Geen script? <a href="#" onclick="om('help',true);return false;">Bekijk installatie-instructies</a></div>
+  </div>
+
+  <div class="dev-banner" id="dev-banner">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Bewerkingsmodus — sleep tegels, bewerk of verwijder via de knoppen.
+  </div>
+
+  <div id="sections-root"></div>
+
+  <div class="status">
+    <div class="sdot" id="sdot"></div>
+    <span id="smsg">Klaar. Selecteer je naam en tik op een tegel.</span>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div class="mo" id="mo-help">
+  <div class="md" style="max-width:460px">
+    <div class="md-lbl">Installatie</div>
+    <div class="md-title">Google Apps Script koppelen</div>
+    <div style="font-size:13px;color:var(--mt);line-height:1.9">
+      <b style="color:var(--tx)">1.</b> Open je Google Sheet → <code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">Extensies → Apps Script</code><br>
+      <b style="color:var(--tx)">2.</b> Verwijder alle code, plak de inhoud van <code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">seallijst_script.gs</code><br>
+      <b style="color:var(--tx)">3.</b> Pas bovenaan <code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">SHEET_NAME</code> aan naar de naam van jouw tabblad (bijv. <code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">"April"</code>)<br>
+      <b style="color:var(--tx)">4.</b> <code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">Implementeren → Nieuwe implementatie</code><br>
+      &nbsp;&nbsp;&nbsp;Type: <b style="color:var(--tx)">Web-app</b> | Uitvoeren als: <b style="color:var(--tx)">Ikzelf</b> | Toegang: <b style="color:var(--tx)">Iedereen</b><br>
+      <b style="color:var(--tx)">5.</b> Kopieer de URL → plak in het veld <b style="color:var(--tx)">Script URL</b> hierboven<br><br>
+      <span style="font-size:11px;color:var(--dm)">Het script zoekt de juiste rij op basis van de datum en schrijft elke waarde naar de juiste kolom.</span>
+    </div>
+    <div style="margin-top:20px"><button class="mb mb-ok" onclick="cm('help')" style="width:100%">Begrepen</button></div>
+  </div>
+</div>
+
+<!-- VALUE MODAL -->
+<div class="mo" id="mo-value">
+  <div class="md">
+    <div class="md-lbl" id="v-lbl">Invoer</div>
+    <div class="md-title" id="v-title">—</div>
+    <input class="big-inp" id="v-inp" autocomplete="off">
+    <div class="md-hint" id="v-hint"></div>
+    <div class="btns3">
+      <button class="mb" onclick="cm('value')">Annuleer</button>
+      <button class="mb mb-del" onclick="clearVal()">Wis</button>
+      <button class="mb mb-ok" onclick="saveVal()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TILE MODAL -->
+<div class="mo" id="mo-edit">
+  <div class="md">
+    <div class="md-lbl">Tegel bewerken</div>
+    <div class="ef" style="margin-top:6px">
+      <label class="el">Naam</label><input class="ei" id="e-name" type="text">
+    </div>
+    <div class="ef">
+      <label class="el">Sheet-kolomnaam (exact zoals in spreadsheet)</label>
+      <input class="ei" id="e-col" type="text" placeholder="bijv. Pallet DE UIT">
+    </div>
+    <div class="ef">
+      <label class="el">Type invoer</label>
+      <div class="tbns">
+        <button class="tbtn" id="e-t-a" onclick="selType('aantal')">&#35; Aantal</button>
+        <button class="tbtn" id="e-t-t" onclick="selType('tijd')">&#9200; Tijdstip</button>
+        <button class="tbtn" id="e-t-tx" onclick="selType('tekst')">Aa Tekst</button>
+      </div>
+    </div>
+    <div class="btns2">
+      <button class="mb" onclick="cm('edit')">Annuleer</button>
+      <button class="mb mb-ok" onclick="saveEdit()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TILE MODAL -->
+<div class="mo" id="mo-at">
+  <div class="md">
+    <div class="md-lbl">Nieuwe tegel</div>
+    <div class="md-title" id="at-sec" style="margin-bottom:16px">—</div>
+    <div class="ef">
+      <label class="el">Naam (weergave in app)</label>
+      <input class="ei" id="at-name" type="text" placeholder="Bijv. PostNL UIT Groot">
+    </div>
+    <div class="ef">
+      <label class="el">Sheet-kolomnaam (exact)</label>
+      <input class="ei" id="at-col" type="text" placeholder="Bijv. PostNL UIT Groot">
+    </div>
+    <div class="ef">
+      <label class="el">Type invoer</label>
+      <div class="tbns">
+        <button class="tbtn sel" id="at-t-a" onclick="selAtType('aantal')">&#35; Aantal</button>
+        <button class="tbtn" id="at-t-t" onclick="selAtType('tijd')">&#9200; Tijdstip</button>
+        <button class="tbtn" id="at-t-tx" onclick="selAtType('tekst')">Aa Tekst</button>
+      </div>
+    </div>
+    <div class="btns2">
+      <button class="mb" onclick="cm('at')">Annuleer</button>
+      <button class="mb mb-ok" onclick="saveAt()">Toevoegen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SECTION MODAL -->
+<div class="mo" id="mo-as">
+  <div class="md">
+    <div class="md-lbl">Nieuwe sectie</div>
+    <div class="md-title" style="margin-bottom:16px">Sectie toevoegen</div>
+    <div class="ef"><label class="el">Naam</label><input class="ei" id="as-name" type="text" placeholder="Bijv. DPD"></div>
+    <div class="btns2">
+      <button class="mb" onclick="cm('as')">Annuleer</button>
+      <button class="mb mb-ok" onclick="saveAs_()">Toevoegen</button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME SECTION MODAL -->
+<div class="mo" id="mo-rs">
+  <div class="md">
+    <div class="md-lbl">Sectie hernoemen</div>
+    <div class="md-title" id="rs-old" style="margin-bottom:16px">—</div>
+    <div class="ef"><label class="el">Nieuwe naam</label><input class="ei" id="rs-name" type="text"></div>
+    <div class="btns2">
+      <button class="mb" onclick="cm('rs')">Annuleer</button>
+      <button class="mb mb-ok" onclick="saveRs()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Standaard tegels — col = exacte kolomnaam in spreadsheet
+const DEFAULT={sections:[
+  {id:'s0',name:'Deutsche Post',tiles:[
+    {id:'t0',name:'Pallet DE UIT',col:'Pallet DE UIT',type:'aantal'},
+    {id:'t1',name:'Pallet DE IN',col:'Pallet DE IN',type:'aantal'},
+    {id:'t2',name:'Warenpost Pallet UIT',col:'Warenpost Pallet UIT',type:'aantal'},
+    {id:'t3',name:'PB In',col:'PB In',type:'aantal'},
+    {id:'t4',name:'Aankomsttijd DE',col:'Aankomsttijd DE',type:'tijd'},
+    {id:'t5',name:'Vertrektijd DE',col:'Vertrektijd DE',type:'tijd'},
+  ]},
+  {id:'s1',name:'Italy',tiles:[
+    {id:'t6',name:'Italy dozen uit',col:'Italy dozen uit',type:'aantal'},
+    {id:'t7',name:'Aankomsttijd ITA',col:'Aankomsttijd ITA',type:'tijd'},
+    {id:'t8',name:'Vertrektijd ITA',col:'Vertrektijd ITA',type:'tijd'},
+  ]},
+  {id:'s2',name:'Mondial Relay',tiles:[
+    {id:'t9',name:'Mondial uit',col:'Mondial uit',type:'aantal'},
+  ]},
+  {id:'s3',name:'PostNL',tiles:[
+    {id:'t10',name:'PostNL Buitenland',col:'Postnl Buitenland',type:'aantal'},
+    {id:'t11',name:'Vrachtbrief PostNL',col:'Vrachtbrief Postnl',type:'tekst'},
+    {id:'t12',name:'P1700 Orderformulier',col:'P1700 Orderformulier',type:'tekst'},
+    {id:'t13',name:'PostNL UIT Klein',col:'PostNL UIT Klein',type:'aantal'},
+    {id:'t14',name:'PostNL UIT Groot',col:'PostNL UIT Groot',type:'aantal'},
+    {id:'t15',name:'PostNL IN Klein',col:'PostNL IN Klein',type:'aantal'},
+    {id:'t16',name:'PostNL IN Groot',col:'PostNL IN Groot',type:'aantal'},
+    {id:'t17',name:'Aankomsttijd PostNL 20:00',col:'Aankomsttijd PostNL 20:00',type:'tijd'},
+    {id:'t18',name:'Vertrektijd PostNL 20:00',col:'Vertrektijd PostNL 20:00',type:'tijd'},
+    {id:'t19',name:'Aankomsttijd PostNL 22:00',col:'Aankomsttijd PostNL 22:00',type:'tijd'},
+    {id:'t20',name:'Vertrektijd PostNL 22:00',col:'Vertrektijd PostNL 22:00',type:'tijd'},
+  ]},
+  {id:'s4',name:'Bpost & Landmark',tiles:[
+    {id:'t21',name:'Bpost / Landmark UIT',col:'Bpost/Landmark UIT',type:'aantal'},
+    {id:'t22',name:'Bpost UIT PostNL RC',col:'Bpost UIT PostNL RC',type:'aantal'},
+    {id:'t23',name:'Landmark Pallets uit',col:'Landmark Pallets uit',type:'aantal'},
+    {id:'t24',name:'Landmark PB uit',col:'Landmark PB uit',type:'aantal'},
+    {id:'t25',name:'Landmark PB in',col:'Landmark PB in',type:'aantal'},
+    {id:'t26',name:'Bpost IN',col:'Bpost IN',type:'aantal'},
+    {id:'t27',name:'Aankomsttijd Bpost',col:'Aankomsttijd Bpost',type:'tijd'},
+    {id:'t28',name:'Vertrektijd Bpost',col:'Vertrektijd Bpost',type:'tijd'},
+    {id:'t29',name:'Collis UIT (Post NL Klein)',col:'Collis UIT (Post NL Klein)',type:'aantal'},
+  ]},
+]};
+
+const today=new Date();
+const dk=today.toISOString().slice(0,10);
+const CFG='sl_cfg4',DAT='sl_dat4_'+dk,NAME_K='sl_name';
+let cfg,dat,dev=false;
+let curTile=null,editId=null,editType='aantal',atSecId=null,atType='aantal',rsSecId=null;
+let dragId=null,dragSid=null;
+let uid=300;
+
+function nid(){return 't'+(++uid)+'_'+Date.now();}
+function nsid(){return 's'+(++uid)+'_'+Date.now();}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+try{cfg=JSON.parse(localStorage.getItem(CFG));}catch(e){}
+if(!cfg||!cfg.sections)cfg=JSON.parse(JSON.stringify(DEFAULT));
+try{dat=JSON.parse(localStorage.getItem(DAT)||'{}');}catch(e){dat={};}
+
+const ni=document.getElementById('name-inp');
+const savedN=localStorage.getItem(NAME_K)||'';
+ni.value=savedN;
+if(savedN)ni.classList.add('ok');
+ni.addEventListener('input',()=>{
+  const v=ni.value.trim();
+  ni.classList.toggle('ok',v.length>0);
+  if(v)localStorage.setItem(NAME_K,v);
+  document.getElementById('name-req').classList.remove('show');
+});
+
+const savedUrl=localStorage.getItem('sl_script_url')||'';
+if(savedUrl)document.getElementById('script-url').value=savedUrl;
+document.getElementById('script-url').addEventListener('input',e=>localStorage.setItem('sl_script_url',e.target.value.trim()));
+
+document.getElementById('hdr-date').textContent=today.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+function saveCfg(){localStorage.setItem(CFG,JSON.stringify(cfg));}
+function saveDat(){localStorage.setItem(DAT,JSON.stringify(dat));}
+
+function render(){
+  const root=document.getElementById('sections-root');
+  root.innerHTML='';
+  let tot=0,fil=0;
+  cfg.sections.forEach(sec=>{
+    const f=sec.tiles.filter(t=>dat[t.id]!==undefined&&dat[t.id]!=='').length;
+    tot+=sec.tiles.length;fil+=f;
+    const sd=document.createElement('div');
+    sd.className='section';sd.dataset.sid=sec.id;
+    sd.innerHTML=`<div class="sec-hdr">
+      <span class="sec-lbl">${esc(sec.name)}</span>
+      <div class="sec-line"></div>
+      <span class="sec-badge">${f}/${sec.tiles.length}</span>
+      <div class="sec-dev-btns">
+        <button class="sbtn" onclick="openRs('${sec.id}')">Hernoem</button>
+        <button class="sbtn" onclick="openAt('${sec.id}')">+ Tegel</button>
+        <button class="sbtn sbtn-r" onclick="delSec('${sec.id}')">Verwijder sectie</button>
+      </div></div>
+      <div class="grid" id="g-${sec.id}"></div>`;
+    root.appendChild(sd);
+    const grid=sd.querySelector('.grid');
+    sec.tiles.forEach(tile=>grid.appendChild(mkTile(tile,sec.id)));
+  });
+  if(dev){
+    const ab=document.createElement('div');ab.style.marginTop='10px';
+    ab.innerHTML=`<button class="btn btn-am" onclick="openAs()" style="width:100%">+ Nieuwe sectie toevoegen</button>`;
+    root.appendChild(ab);
+  }
+  const pct=tot?Math.round(fil/tot*100):0;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('prog-cnt').textContent=fil+' van '+tot+' ingevuld';
+  saveDat();
+}
+
+function mkTile(tile,sid){
+  const d=document.createElement('div');
+  d.className='tile'+(dat[tile.id]?' filled':'');
+  d.dataset.tid=tile.id;d.dataset.sid=sid;
+  const typeIcon=tile.type==='tijd'?'⏰':tile.type==='tekst'?'Aa':'#';
+  d.innerHTML=`
+    <div class="drag-h" draggable="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.2"/><circle cx="11" cy="3" r="1.2"/><circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/><circle cx="5" cy="13" r="1.2"/><circle cx="11" cy="13" r="1.2"/></svg></div>
+    <div class="tile-dov">
+      <button class="tdbtn" data-act="edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      <button class="tdbtn del" data-act="del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+    </div>
+    <div class="t-type">${typeIcon}</div>
+    <div class="t-name">${esc(tile.name)}</div>
+    <div class="t-val">${dat[tile.id]||'Nog leeg'}</div>`;
+  if(!dev)d.addEventListener('click',()=>openVal(tile.id));
+  d.querySelector('[data-act="edit"]').addEventListener('click',e=>{e.stopPropagation();openEdit(tile.id);});
+  d.querySelector('[data-act="del"]').addEventListener('click',e=>{e.stopPropagation();delTile(tile.id,sid);});
+  const dh=d.querySelector('.drag-h');
+  dh.addEventListener('dragstart',e=>{dragId=tile.id;dragSid=sid;setTimeout(()=>d.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
+  dh.addEventListener('dragend',()=>d.classList.remove('dragging'));
+  d.addEventListener('dragover',e=>{e.preventDefault();d.classList.add('drag-over');});
+  d.addEventListener('dragleave',()=>d.classList.remove('drag-over'));
+  d.addEventListener('drop',e=>{
+    e.preventDefault();d.classList.remove('drag-over');
+    if(!dragId||dragId===tile.id)return;
+    const ss=cfg.sections.find(s=>s.id===dragSid),ds=cfg.sections.find(s=>s.id===sid);
+    if(!ss||!ds)return;
+    const si=ss.tiles.findIndex(t=>t.id===dragId),di=ds.tiles.findIndex(t=>t.id===tile.id);
+    if(si===-1||di===-1)return;
+    const[mv]=ss.tiles.splice(si,1);ds.tiles.splice(di,0,mv);
+    saveCfg();render();
+  });
+  return d;
+}
+
+function findTile(id){for(const s of cfg.sections){const t=s.tiles.find(t=>t.id===id);if(t)return t;}return null;}
+
+function openVal(tid){
+  if(dev)return;curTile=tid;
+  const t=findTile(tid);
+  document.getElementById('v-lbl').textContent=t.type==='tijd'?'Tijdstip invoeren':t.type==='tekst'?'Tekst invoeren':'Aantal invoeren';
+  document.getElementById('v-title').textContent=t.name;
+  const inp=document.getElementById('v-inp');
+  if(t.type==='tijd'){inp.type='time';inp.inputMode='none';inp.placeholder='00:00';document.getElementById('v-hint').textContent='Voer het tijdstip in (bijv. 20:15)';}
+  else if(t.type==='tekst'){inp.type='text';inp.inputMode='text';inp.placeholder='Voer tekst in';document.getElementById('v-hint').textContent='';}
+  else{inp.type='number';inp.inputMode='numeric';inp.min='0';inp.placeholder='0';document.getElementById('v-hint').textContent='Voer het aantal in';}
+  inp.value=dat[tid]||'';
+  om('value',true);setTimeout(()=>inp.focus(),100);
+}
+function saveVal(){
+  if(!curTile)return;
+  const v=document.getElementById('v-inp').value.trim();
+  if(v!==''){dat[curTile]=v;render();toast('Opgeslagen');}
+  cm('value');
+}
+function clearVal(){if(!curTile)return;delete dat[curTile];render();cm('value');}
+
+function openEdit(tid){
+  const t=findTile(tid);if(!t)return;
+  editId=tid;editType=t.type||'aantal';
+  document.getElementById('e-name').value=t.name;
+  document.getElementById('e-col').value=t.col||t.name;
+  ['a','t','tx'].forEach(x=>document.getElementById('e-t-'+x).classList.remove('sel'));
+  const map={aantal:'a',tijd:'t',tekst:'tx'};
+  document.getElementById('e-t-'+(map[editType]||'a')).classList.add('sel');
+  om('edit',true);setTimeout(()=>document.getElementById('e-name').focus(),100);
+}
+function selType(t){
+  editType=t;
+  ['a','t','tx'].forEach(x=>document.getElementById('e-t-'+x).classList.remove('sel'));
+  const map={aantal:'a',tijd:'t',tekst:'tx'};
+  document.getElementById('e-t-'+(map[t]||'a')).classList.add('sel');
+}
+function saveEdit(){
+  const n=document.getElementById('e-name').value.trim();if(!n)return;
+  const c=document.getElementById('e-col').value.trim();
+  const t=findTile(editId);if(t){t.name=n;t.col=c||n;t.type=editType;}
+  saveCfg();render();cm('edit');toast('Tegel bijgewerkt');
+}
+function delTile(tid,sid){
+  if(!confirm('Tegel verwijderen?'))return;
+  const s=cfg.sections.find(s=>s.id===sid);if(!s)return;
+  s.tiles=s.tiles.filter(t=>t.id!==tid);delete dat[tid];
+  saveCfg();render();toast('Tegel verwijderd');
+}
+function openAt(sid){
+  atSecId=sid;atType='aantal';
+  const s=cfg.sections.find(s=>s.id===sid);
+  document.getElementById('at-sec').textContent=s?s.name:'';
+  document.getElementById('at-name').value='';document.getElementById('at-col').value='';
+  ['a','t','tx'].forEach(x=>document.getElementById('at-t-'+x).classList.remove('sel'));
+  document.getElementById('at-t-a').classList.add('sel');
+  om('at',true);setTimeout(()=>document.getElementById('at-name').focus(),100);
+}
+function selAtType(t){
+  atType=t;
+  ['a','t','tx'].forEach(x=>document.getElementById('at-t-'+x).classList.remove('sel'));
+  const map={aantal:'a',tijd:'t',tekst:'tx'};
+  document.getElementById('at-t-'+(map[t]||'a')).classList.add('sel');
+}
+function saveAt(){
+  const n=document.getElementById('at-name').value.trim();if(!n)return;
+  const c=document.getElementById('at-col').value.trim();
+  const s=cfg.sections.find(s=>s.id===atSecId);if(!s)return;
+  s.tiles.push({id:nid(),name:n,col:c||n,type:atType});
+  saveCfg();render();cm('at');toast('Tegel toegevoegd');
+}
+function openAs(){document.getElementById('as-name').value='';om('as',true);setTimeout(()=>document.getElementById('as-name').focus(),100);}
+function saveAs_(){
+  const n=document.getElementById('as-name').value.trim();if(!n)return;
+  cfg.sections.push({id:nsid(),name:n,tiles:[]});
+  saveCfg();render();cm('as');toast('Sectie "'+n+'" toegevoegd');
+}
+function delSec(sid){
+  const s=cfg.sections.find(s=>s.id===sid);if(!s)return;
+  if(!confirm('Sectie "'+s.name+'" en alle tegels verwijderen?'))return;
+  s.tiles.forEach(t=>delete dat[t.id]);
+  cfg.sections=cfg.sections.filter(s=>s.id!==sid);
+  saveCfg();render();toast('Sectie verwijderd');
+}
+function openRs(sid){
+  const s=cfg.sections.find(s=>s.id===sid);if(!s)return;
+  rsSecId=sid;document.getElementById('rs-old').textContent=s.name;document.getElementById('rs-name').value=s.name;
+  om('rs',true);setTimeout(()=>document.getElementById('rs-name').focus(),100);
+}
+function saveRs(){
+  const n=document.getElementById('rs-name').value.trim();if(!n)return;
+  const s=cfg.sections.find(s=>s.id===rsSecId);if(s)s.name=n;
+  saveCfg();render();cm('rs');toast('Sectie hernoemd');
+}
+
+const MOS={value:'mo-value',edit:'mo-edit',at:'mo-at',as:'mo-as',rs:'mo-rs',help:'mo-help'};
+function om(k,open){const el=document.getElementById(MOS[k]);if(el)el.classList.toggle('open',!!open);}
+function cm(k){om(k,false);if(k==='value')curTile=null;}
+Object.entries(MOS).forEach(([k,id])=>{document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))cm(k);});});
+document.getElementById('v-inp').addEventListener('keydown',e=>{if(e.key==='Enter')saveVal();if(e.key==='Escape')cm('value');});
+['e-name','e-col','at-name','at-col','as-name','rs-name'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter'){const map={'e-name':saveEdit,'at-name':saveAt,'as-name':saveAs_,'rs-name':saveRs};if(map[id])map[id]();}});
+});
+
+function toggleDev(){
+  dev=!dev;
+  document.getElementById('app').classList.toggle('dev-mode',dev);
+  document.getElementById('dev-btn').classList.toggle('on',dev);
+  document.getElementById('dev-banner').classList.toggle('on',dev);
+  render();
+}
+function resetAll(){
+  if(!confirm('Alle velden voor vandaag resetten?'))return;
+  dat={};render();setStatus('','Gereset voor '+dk);
+}
+function setStatus(t,m){document.getElementById('sdot').className='sdot'+(t?' '+t:'');document.getElementById('smsg').textContent=m;}
+function toast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2200);}
+function openSheet(){
+  const id=document.getElementById('sheet-id').value.trim();
+  if(!id){alert('Vul eerst een Sheet ID in.');return;}
+  window.open('https://docs.google.com/spreadsheets/d/'+id+'/edit','_blank');
+}
+
+// Datum formatteren als dd-mm-yyyy
+function fmtDate(d){
+  return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear();
+}
+
+async function saveToSheet(){
+  const name=ni.value.trim();
+  if(!name){document.getElementById('name-req').classList.add('show');ni.focus();return;}
+  const scriptUrl=document.getElementById('script-url').value.trim();
+  if(!scriptUrl){setStatus('err','Vul de Apps Script URL in');om('help',true);return;}
+
+  setStatus('saving','Bezig met opslaan naar Google Drive...');
+
+  // Bouw data-object: { kolomnaam: waarde }
+  const data={};
+  cfg.sections.forEach(sec=>{
+    sec.tiles.forEach(t=>{
+      if(dat[t.id]!==undefined&&dat[t.id]!==''){
+        data[t.col||t.name]=dat[t.id];
+      }
+    });
+  });
+
+  const payload={
+    naam:name,
+    datum:fmtDate(today),
+    opmerkingen:document.getElementById('opmerking-inp').value.trim(),
+    data
+  };
+
+  try{
+    const resp=await fetch(scriptUrl,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify(payload)
+    });
+    const ts=new Date().toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+    let result={};
+    try{result=await resp.json();}catch(e){}
+    if(result.status==='error'){
+      setStatus('err','Script fout: '+result.message);
+      toast('Fout — zie statusbalk');
+    } else {
+      setStatus('ok','Opgeslagen door '+name+' om '+ts+(result.niet_gevonden&&result.niet_gevonden.length?' ('+result.niet_gevonden.length+' kolom(men) niet gevonden)':''));
+      toast('Opgeslagen in Drive!');
+    }
+  }catch(e){
+    setStatus('err','Netwerkfout: '+e.message+' — controleer de Script URL en of toegang op "Iedereen" staat');
+  }
+}
+
+render();
+</script>
+</body>
+</html>
